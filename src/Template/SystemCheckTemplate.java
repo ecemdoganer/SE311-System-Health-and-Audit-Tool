@@ -1,17 +1,24 @@
 package Template;
 
+import Adapter.SystemMetricsProvider;
+import Composite.*;
 import Singleton.ReportManager;
+import Visitor.SystemVisitor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class SystemCheckTemplate {
-
-    protected Computer systemComputer;
-
-    // Kişi 1'in OS soyutlama arayüzü
     protected SystemMetricsProvider metricsProvider;
+    protected Computer systemComputer;
+    protected List<SystemVisitor> activeTasks = new ArrayList<>();
 
-    // Constructor veya Setter ile metricsProvider'ı dışarıdan (Facade'den) alacağız
     public void setMetricsProvider(SystemMetricsProvider provider) {
         this.metricsProvider = provider;
+    }
+
+    public void addTask(SystemVisitor visitor) {
+        this.activeTasks.add(visitor);
     }
 
     public final void runSystemCheck() {
@@ -25,36 +32,41 @@ public abstract class SystemCheckTemplate {
     protected abstract void setup();
 
     protected void collectData() {
-        System.out.println("--- [Template] Veri Toplama Adımı Başladı ---");
+        ReportManager.getInstance().addLog("--- 2. DATA COLLECTION STEP ---");
 
-        if (metricsProvider == null) {
-            ReportManager.getInstance().addLog("HATA: OS Metrics Provider bulunamadı!");
-            return;
+        if (metricsProvider != null) {
+            ReportManager.getInstance().addLog(metricsProvider.getProcessorInfo());
+            ReportManager.getInstance().addLog(metricsProvider.getMemoryUsage());
+            ReportManager.getInstance().addLog(metricsProvider.getProcessUsage());
+            ReportManager.getInstance().addLog(metricsProvider.getNICInformation());
+            ReportManager.getInstance().addLog(metricsProvider.getFreeDiskSpace());
         }
 
-        // KİŞİ 1'İN METOTLARINI CAGIRDIK
-        String cpuData = metricsProvider.getProcessorInfo();
-        String memoryData = metricsProvider.getMemoryUsage();
-        String processData = metricsProvider.getProcessUsage();
-        String nicData = metricsProvider.getNICInformation();
-        String diskData = metricsProvider.getFreeDiskSpace();
+        // Yeni SystemModel yapısına göre simüle veri ataması
+        systemComputer = new Computer("Mainframe Computer");
+        systemComputer.add(new CPU("Intel Core i9", 8, 90));
+        systemComputer.add(new Memory("Corsair Vengeance", 16, 10000));
+        systemComputer.add(new Disk("Samsung NVMe", 512, 95, false));
+        systemComputer.add(new ProcessInfo("malware.exe", 300));
 
-        ReportManager.getInstance().addLog("İşletim Sistemi Ham Verileri Çekildi:");
-        ReportManager.getInstance().addLog(" - CPU: " + cpuData);
-        ReportManager.getInstance().addLog(" - Memory: " + memoryData);
-        ReportManager.getInstance().addLog(" - Processes: " + processData);
-        ReportManager.getInstance().addLog(" - NIC: " + nicData);
-        ReportManager.getInstance().addLog(" - Disk: " + diskData);
-
-        systemComputer = new Computer();
-        systemComputer.addComponent(new CPU(85)); // Örn: %85 kullanım (Kritik uyarı tetikler)
-        systemComputer.addComponent(new Memory(9000)); // Örn: 9000 MB kullanım
-        systemComputer.addComponent(new Disk(95, false)); // Şifresiz ve %95 dolu
-        systemComputer.addComponent(new ProcessInfo("chrome.exe", 700));
-        systemComputer.addComponent(new ProcessInfo("malware.exe", 300));
-
-        ReportManager.getInstance().addLog("Donanım nesne modeli başarıyla oluşturuldu.");
+        ReportManager.getInstance().addLog("Hardware component tree initialized.");
     }
 
-    // ... (checkData, performAnalysis ve generateReport metotları önceki mesajdaki gibi kalacak)
+    protected void checkData() {
+        ReportManager.getInstance().addLog("--- 3. DATA VERIFICATION STEP ---");
+        if (systemComputer != null) {
+            ReportManager.getInstance().addLog("System data verified for analysis.");
+        }
+    }
+
+    protected void performAnalysis() {
+        ReportManager.getInstance().addLog("--- 4. ANALYSIS STEP ---");
+        for (SystemVisitor task : activeTasks) {
+            systemComputer.accept(task);
+        }
+    }
+
+    protected void generateReport() {
+        ReportManager.getInstance().printReport();
+    }
 }
