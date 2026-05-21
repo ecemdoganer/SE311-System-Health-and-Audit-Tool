@@ -8,4 +8,5 @@ public interface SystemVisitor {
     void visitMemory(Memory memory);
     void visitDisk(Disk disk);
     void visitProcess(ProcessInfo process);
+    void visitNIC(NIC nic);
 }

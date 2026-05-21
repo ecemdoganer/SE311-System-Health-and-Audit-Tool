@@ -18,10 +18,12 @@ public abstract class SystemCheckTemplate {
     }
 
     public void addTask(SystemVisitor visitor) {
-        this.activeTasks.add(visitor);
+        activeTasks.add(visitor);
     }
 
     public final void runSystemCheck() {
+        ReportManager.getInstance().clearReport();
+
         setup();
         collectData();
         checkData();
@@ -42,31 +44,51 @@ public abstract class SystemCheckTemplate {
             ReportManager.getInstance().addLog(metricsProvider.getFreeDiskSpace());
         }
 
-        // Yeni SystemModel yapısına göre simüle veri ataması
-        systemComputer = new Computer("Mainframe Computer");
-        systemComputer.add(new CPU("Intel Core i9", 8, 90));
-        systemComputer.add(new Memory("Corsair Vengeance", 16, 10000));
-        systemComputer.add(new Disk("Samsung NVMe", 512, 95, false));
-        systemComputer.add(new ProcessInfo("malware.exe", 300));
+        systemComputer = new Computer("System Computer");
+
+        Motherboard motherboard = new Motherboard("Main Motherboard");
+        CPU cpu = new CPU("Intel Core i9", 8, 90);
+        Memory memory = new Memory("System Memory", 16, 10000);
+        Disk disk = new Disk("Samsung NVMe Disk", 512, 95, false);
+        ISABus isaBus = new ISABus("ISA Bus");
+        NIC nic = new NIC("Ethernet NIC", "192.168.1.55", true);
+        ProcessInfo suspiciousProcess = new ProcessInfo("malware.exe", 300);
+        ProcessInfo heavyProcess = new ProcessInfo("chrome.exe", 900);
+
+        isaBus.add(nic);
+
+        motherboard.add(cpu);
+        motherboard.add(memory);
+        motherboard.add(isaBus);
+
+        systemComputer.add(motherboard);
+        systemComputer.add(disk);
+        systemComputer.add(suspiciousProcess);
+        systemComputer.add(heavyProcess);
 
         ReportManager.getInstance().addLog("Hardware component tree initialized.");
     }
 
     protected void checkData() {
         ReportManager.getInstance().addLog("--- 3. DATA VERIFICATION STEP ---");
+
         if (systemComputer != null) {
             ReportManager.getInstance().addLog("System data verified for analysis.");
+        } else {
+            ReportManager.getInstance().addLog("System data could not be verified.");
         }
     }
 
     protected void performAnalysis() {
         ReportManager.getInstance().addLog("--- 4. ANALYSIS STEP ---");
+
         for (SystemVisitor task : activeTasks) {
             systemComputer.accept(task);
         }
     }
 
     protected void generateReport() {
+        ReportManager.getInstance().addLog("--- 5. REPORT GENERATION STEP ---");
         ReportManager.getInstance().printReport();
     }
 }
