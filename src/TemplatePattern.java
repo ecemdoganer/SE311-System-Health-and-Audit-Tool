@@ -82,6 +82,7 @@ abstract class SystemCheckTemplate {
 
     protected void generateReport() {
         ReportManager.getInstance().addLog("--- 5. REPORT GENERATION STEP ---");
+        ReportManager.getInstance().addLog("Final report is generated successfully.");
         ReportManager.getInstance().printReport();
     }
 }
